@@ -1,4 +1,4 @@
-package booking
+package booking.actor
 
 import akka.actor.typed.Behavior
 import akka.persistence.typed.PersistenceId
@@ -12,7 +12,7 @@ object Hotel {
 
   def commandHandler(hotelId: String): (State, Command) => Effect[Event, State] = (state, command) =>
     command match {
-      case MakeReservation (guestId, startDate, endDate, roomNumber, replyTo) =>
+      case MakeReservation(guestId, startDate, endDate, roomNumber, replyTo) =>
         val tentativeReservation = Reservation.make(guestId, hotelId, startDate, endDate, roomNumber)
         val conflictingReservationOption = state.reservations.find(r => r.intersect(tentativeReservation))
 
@@ -26,11 +26,12 @@ object Hotel {
           Effect.reply(replyTo)(CommandFailure("Reservation failed: conflict with another reservation"))
         }
 
-      case ChangeReservation (confirmationNumber, startDate, endDate, roomNumber, replyTo ) =>
-        Effect.none //todo
-      case CancelReservation (confirmationNumber, replyTo ) =>
+      case ChangeReservation(confirmationNumber, startDate, endDate, roomNumber, replyTo) =>
+        Effect.none //todos
+      case CancelReservation(confirmationNumber, replyTo) =>
         Effect.none //todo
     }
+
   def eventHandler(hotelId: String): (State, Event) => State = (state, event) =>
     event match {
       case ReservationAccepted(res) =>
