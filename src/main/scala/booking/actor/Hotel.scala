@@ -16,14 +16,11 @@ object Hotel {
         val tentativeReservation = Reservation.make(guestId, hotelId, startDate, endDate, roomNumber)
         val conflictingReservationOption = state.reservations.find(r => r.intersect(tentativeReservation))
 
-        if (conflictingReservationOption.isEmpty) {
-          // success: persist event, can make reservation
-          Effect
+        conflictingReservationOption match {
+          case None => Effect           // success: persist event, can make reservation
             .persist(ReservationAccepted(tentativeReservation)) // persist
             .thenReply(replyTo)(s => ReservationAccepted(tentativeReservation)) // reply to the "manager"
-        } else {
-          // failure: conflicting reservations
-          Effect.reply(replyTo)(CommandFailure("Reservation failed: conflict with another reservation"))
+          case Some(conflictReservation) => Effect.reply(replyTo)(CommandFailure(s"Reservation failed: conflict with another reservation: ${conflictReservation.confirmationNumber}"))
         }
 
       case ChangeReservation(confirmationNumber, startDate, endDate, roomNumber, replyTo) =>
@@ -36,15 +33,15 @@ object Hotel {
     event match {
       case ReservationAccepted(res) =>
         val newState = state.copy(reservations = state.reservations + res)
-        println(s"state changed: $newState")
+        println(s"Reservation ACCEPTED. New State: $newState")
         newState
       case ReservationUpdated(oldReservation, newReservation) =>
         val newState = state.copy(reservations = state.reservations - oldReservation + newReservation)
-        println(s"state changed: $newState")
+        println(s"Reservation UPDATED. New State: $newState")
         newState
       case ReservationCanceled(res) =>
         val newState = state.copy(reservations = state.reservations - res)
-        println(s"state changed: $newState")
+        println(s"Reservation CANCELLED. New State: $newState")
         newState
     }
 
