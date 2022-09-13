@@ -24,9 +24,41 @@ object Hotel {
         }
 
       case ChangeReservation(confirmationNumber, startDate, endDate, roomNumber, replyTo) =>
-        Effect.none //todos
+        // if no reservation => failure
+        // create new tentative reservation
+        // find if they conflict, if so => failure
+        // otherwise, persist ReservationChanged
+        val oldReservationOption = state.reservations.find(_.confirmationNumber == confirmationNumber)
+        val newReservationOption = oldReservationOption
+          .map(res => res.copy(startDate = startDate, endDate = endDate, roomNumber = roomNumber))
+
+        val reservationUpdatedEventOption = for {
+          oldReservation <- oldReservationOption
+          newReservation <- newReservationOption
+        } yield ReservationUpdated(oldReservation, newReservation)
+
+        val conflictingReservationOption = newReservationOption.flatMap { tentativeReservation =>
+          state.reservations.find(r => r.confirmationNumber != confirmationNumber && r.intersect(tentativeReservation))
+        }
+
+        (reservationUpdatedEventOption, conflictingReservationOption) match {
+          case (None, _) =>
+            Effect.reply(replyTo)(CommandFailure(s"Cannot update reservation $confirmationNumber: not found"))
+          case (_, Some(conflictRes)) =>
+            Effect.reply(replyTo)(CommandFailure(s"Cannot update reservation $confirmationNumber: conflict with another reservation: ${conflictRes.confirmationNumber}"))
+          case (Some(resUpdated), None) => // happy
+            Effect.persist(resUpdated).thenReply(replyTo)(s => resUpdated)
+        }
       case CancelReservation(confirmationNumber, replyTo) =>
-        Effect.none //todo
+        val reservationOption = state.reservations.find(_.confirmationNumber == confirmationNumber)
+        reservationOption match {
+          case Some(res) =>
+            // success, confirmation found
+            Effect.persist(ReservationCanceled(res)).thenReply(replyTo)(s => ReservationCanceled(res))
+          case None =>
+            // failure, reservation not found
+            Effect.reply(replyTo)(CommandFailure(s"Cannot cancel reservation $confirmationNumber: not found"))
+        }
     }
 
   def eventHandler(hotelId: String): (State, Event) => State = (state, event) =>

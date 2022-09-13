@@ -21,9 +21,9 @@ object HotelDemo {
       val logger = ctx.spawn(simpleLogger, "logger") // child actor
       val hotel = ctx.spawn(Hotel("testHotel"), "testHotel")
 
-      hotel ! MakeReservation(UUID.randomUUID().toString, Date.valueOf("2022-07-14"), Date.valueOf("2022-07-21"), 101, logger)
-      hotel ! ChangeReservation("9B0KK6ABQR", Date.valueOf("2022-07-14"), Date.valueOf("2022-07-28"), 101, logger)
-      hotel ! CancelReservation("9B0KK6ABQR", logger)
+      //hotel ! MakeReservation(UUID.randomUUID().toString, Date.valueOf("2022-07-14"), Date.valueOf("2022-07-21"), 101, logger)
+      hotel ! ChangeReservation("Z23ML66AZ9", Date.valueOf("2022-07-14"), Date.valueOf("2022-07-29"), 101, logger)
+      //hotel ! CancelReservation("9B0KK6ABQR", logger)
       Behaviors.empty
     }
 
