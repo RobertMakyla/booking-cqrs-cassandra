@@ -23,7 +23,7 @@ object HotelDemo {
 
       hotel ! MakeReservation(UUID.randomUUID().toString, Date.valueOf("2022-07-14"), Date.valueOf("2022-07-21"), 101, logger)
       //hotel ! ChangeReservation("KYH5JJS6CU", Date.valueOf("2022-07-14"), Date.valueOf("2022-07-29"), 101, logger)
-      //hotel ! CancelReservation("Z23ML66AZ9", logger)
+      hotel ! CancelReservation("KYH5JJS6CU", logger)
       Behaviors.empty
     }
 
