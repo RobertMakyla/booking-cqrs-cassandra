@@ -1,14 +1,12 @@
-package booking
+package booking.apps
 
 import akka.actor.typed.ActorSystem
 import akka.actor.typed.scaladsl.Behaviors
 import booking.actor.Hotel
-import booking.model._
-
-import java.sql.Date
-import java.util.UUID
+import booking.model.CancelReservation
 import scala.concurrent.duration._
 
+// the C part from CQRS
 object HotelDemo {
 
   def main(args: Array[String]): Unit = {
@@ -22,15 +20,14 @@ object HotelDemo {
       val hotel = ctx.spawn(Hotel("testHotel"), "testHotel")
 
       //hotel ! MakeReservation(UUID.randomUUID().toString, Date.valueOf("2022-07-14"), Date.valueOf("2022-07-21"), 101, logger)
-      hotel ! ChangeReservation("Z23ML66AZ9", Date.valueOf("2022-07-14"), Date.valueOf("2022-07-29"), 101, logger)
-      //hotel ! CancelReservation("9B0KK6ABQR", logger)
+      //hotel ! ChangeReservation("Z23ML66AZ9", Date.valueOf("2022-07-14"), Date.valueOf("2022-07-29"), 101, logger)
+      hotel ! CancelReservation("Z23ML66AZ9", logger)
       Behaviors.empty
     }
 
     val system = ActorSystem(root, "DemoHotel")
     import system.executionContext
-    system.scheduler.scheduleOnce(15.seconds, () => system.terminate())
+    system.scheduler.scheduleOnce(25.seconds, () => system.terminate())
   }
 
 }
-
